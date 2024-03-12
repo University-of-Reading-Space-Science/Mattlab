@@ -20,7 +20,8 @@ import numpy as np
 import urllib.request
 
 
-import helio_time as htime 
+import conversions.helio_time as htime 
+import sunspots.sunspots as sunspots
 import mplot
 
 
@@ -38,7 +39,7 @@ def read_bfly_data(filename = None, data_dir = '', download_now = False):
                                    data_dir + 'bflydata.txt')
     
     if filename is None:
-        filename = os.environ['DBOX'] + 'Data\\bflydata.txt'
+        filename = os.path.join(os.environ['DBOX'],'Data','bflydata.txt')
     
     # Read the file
     with open(filename, 'r') as file:
@@ -119,25 +120,25 @@ yr = np.array(yr)
 
 # <codecell> #plot time series
 
-#get the solar minimum times
-def LoadSolarMinTimes(filepath = 'null'):
-    if filepath == 'null':
-        filepath = os.environ['DBOX'] + 'Data\\SolarMinTimes.txt'
-    solarmintimes_df = pd.read_csv(filepath,
-                         delim_whitespace=True,
-                         names=['fracyear','cyclenum'])
-    doy = (solarmintimes_df['fracyear'] - np.floor(solarmintimes_df['fracyear']))*364 + 1
-    doy = doy.to_numpy()
-    yr = np.floor(solarmintimes_df['fracyear']).to_numpy()
-    yr=yr.astype(int)
-    solarmintimes_df['mjd'] = htime.doyyr2mjd(doy,yr)
+# #get the solar minimum times
+# def LoadSolarMinTimes(filepath = 'null'):
+#     if filepath == 'null':
+#         filepath = os.environ['DBOX'] + 'Data\\SolarMinTimes.txt'
+#     solarmintimes_df = pd.read_csv(filepath,
+#                          delim_whitespace=True,
+#                          names=['fracyear','cyclenum'])
+#     doy = (solarmintimes_df['fracyear'] - np.floor(solarmintimes_df['fracyear']))*364 + 1
+#     doy = doy.to_numpy()
+#     yr = np.floor(solarmintimes_df['fracyear']).to_numpy()
+#     yr=yr.astype(int)
+#     solarmintimes_df['mjd'] = htime.doyyr2mjd(doy,yr)
     
-    #solarmintimes_df['datetime'] = pd.to_datetime(solarmintimes_df['fracyear'], format='%Y', errors='coerce')
-    solarmintimes_df['datetime'] = htime.mjd2datetime(solarmintimes_df['mjd'].to_numpy())
-    return solarmintimes_df
+#     #solarmintimes_df['datetime'] = pd.to_datetime(solarmintimes_df['fracyear'], format='%Y', errors='coerce')
+#     solarmintimes_df['datetime'] = htime.mjd2datetime(solarmintimes_df['mjd'].to_numpy())
+#     return solarmintimes_df
 
 #read in the solar minimum times
-solarmintimes_df = LoadSolarMinTimes()
+solarmintimes_df = sunspots.LoadSolarMinTimes()
 
 fig = plt.figure()
 ax = plt.subplot(311)
