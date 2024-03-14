@@ -28,11 +28,20 @@ import plotting.mplot as mplot
 
 # <codecell> Data loaders
 
+def _setup_dirs_():
+    cwd = os.path.abspath(os.path.dirname(__file__))
+    root = os.path.dirname(cwd)
+    datapath = os.path.join(root,'Data')
+    
+    return datapath
+
 def LoadSSN(filepath='null', download_now = False, sminpath = None):
     #(dowload from http://www.sidc.be/silso/DATA/SN_m_tot_V2.0.csv)
+    
         
     if filepath == 'null':
-            filepath = os.path.join(os.environ['DBOX'], 'Data','SN_m_tot_V2.0.csv')
+        datapath =  _setup_dirs_()
+        filepath = os.path.join(datapath,'SN_m_tot_V2.0.csv')
             
     if download_now:
         urllib.request.urlretrieve('http://www.sidc.be/silso/DATA/SN_m_tot_V2.0.csv', filepath)
@@ -106,7 +115,8 @@ def LoadSSN(filepath='null', download_now = False, sminpath = None):
     
     #compute phase
     if sminpath is None:
-        sminpath = os.path.join(os.environ['DBOX'] ,'Data','SolarMinTimes.txt')
+        datapath =  _setup_dirs_()
+        sminpath = os.path.join(datapath,'SolarMinTimes.txt')
     smin_df = LoadSolarMinTimes(filepath = sminpath)
     solarmin_mjd = smin_df['mjd'].to_numpy()
     ssn_df['phase'] = solar_cycle_phase(ssn_df['mjd'], solarmin_mjd)
@@ -123,7 +133,8 @@ def LoadSSNyr(filepath='null', download_now = False, sminpath = None):
     #(dowload from https://www.sidc.be/SILSO/DATA/SN_y_tot_V2.0.csv)
         
     if filepath == 'null':
-            filepath = os.path.join(os.environ['DBOX'], 'Data','SN_y_tot_V2.0.csv')
+        datapath =  _setup_dirs_()
+        filepath = os.path.join(datapath,'SN_y_tot_V2.0.csv')
             
     if download_now:
         urllib.request.urlretrieve('https://www.sidc.be/SILSO/DATA/SN_y_tot_V2.0.csv', filepath)
@@ -182,7 +193,8 @@ def LoadSSNyr(filepath='null', download_now = False, sminpath = None):
     
     #compute phase
     if sminpath is None:
-        sminpath = os.path.join(os.environ['DBOX'] ,'Data','SolarMinTimes.txt')
+        datapath =  _setup_dirs_()
+        sminpath = os.path.join(datapath,'SolarMinTimes.txt')
     smin_df = LoadSolarMinTimes(filepath = sminpath)
     solarmin_mjd = smin_df['mjd'].to_numpy()
     ssn_df['phase'] = solar_cycle_phase(ssn_df['mjd'], solarmin_mjd)
@@ -199,11 +211,13 @@ def LoadBBgsn(filepath='null', download_now = False):
     #(dowload from https://www.sidc.be/SILSO/DATA/GroupNumber/GNbb2_y.txt)
         
     if filepath == 'null' and download_now:
+        datapath =  _setup_dirs_()
         urllib.request.urlretrieve('https://www.sidc.be/SILSO/DATA/GroupNumber/GNbb2_y.txt',
-                                   os.environ['DBOX'] + 'Data\\GNbb2_y.txt')
+                                   os.path.join(datapath, 'GNbb2_y.txt'))
         
     if filepath == 'null':
-            filepath = os.path.join(os.environ['DBOX'], 'Data','GNbb2_y.txt')
+        datapath =  _setup_dirs_()
+        filepath = os.path.join(datapath,'GNbb2_y.txt')
         
     gsn_df = pd.read_csv(filepath,
                              delim_whitespace=True,
@@ -224,7 +238,8 @@ def LoadSolarMinTimes(filepath = None):
     #get the solar minimum times
     
     if filepath is None:
-        filepath = os.path.join(os.environ['DBOX'] ,'Data','SolarMinTimes.txt')
+        datapath =  _setup_dirs_()
+        filepath = os.path.join(datapath,'SolarMinTimes.txt')
         
     solarmintimes_df = pd.read_csv(filepath,
                          delim_whitespace=True,
@@ -243,7 +258,7 @@ def LoadSolarMinTimes(filepath = None):
 def load_usoskin_osf(data_dir = None, download_now = False):
 
     if data_dir is None:
-        data_dir = os.path.join(os.environ['DBOX'], 'Data')
+        data_dir =  _setup_dirs_()
         
     osffilepath = os.path.join(data_dir,'Usoskin2023_osf.dat')
     ssnfilepath = os.path.join(data_dir,'Usoskin2023_ssn.dat')
@@ -287,7 +302,7 @@ def load_oulu_nm(filepath = None):
     
     
     if filepath is None:
-        data_dir = os.path.join(os.environ['DBOX'], 'Data')
+        data_dir =  _setup_dirs_()
         filepath = os.path.join(data_dir, 'OULU.dat')
         
     # Define a custom converter function for the date and time columns
@@ -322,11 +337,12 @@ def load_oulu_phi(filepath = None, download_now = True):
     #monitor data, at: https://cosmicrays.oulu.fi/phi/Phi_Table_2017.txt
     
     if download_now:
+        datapath =  _setup_dirs_()
         urllib.request.urlretrieve('https://cosmicrays.oulu.fi/phi/Phi_Table_2017.txt',
-                                   os.path.join(os.environ['DBOX'], 'Data','Phi_Table_2017.txt'))
+                                   os.path.join(datapath,'Phi_Table_2017.txt'))
       
     if filepath is None:
-        data_dir = os.path.join(os.environ['DBOX'], 'Data')
+        data_dir =  _setup_dirs_()
         filepath = os.path.join(data_dir, 'Phi_Table_2017.txt')
         
     valid_lines=[]
@@ -403,11 +419,12 @@ def load_oulu_phi_extended(filepath = None, download_now = True):
     #monitor + ionisation chamber(?) data, at: https://cosmicrays.oulu.fi/phi/Phi_mon.txt
     
     if download_now:
+        datapath =  _setup_dirs_()
         urllib.request.urlretrieve('https://cosmicrays.oulu.fi/phi/Phi_mon.txt',
-                                   os.path.join(os.environ['DBOX'],'Data','Phi_mon.txt'))
+                                   os.path.join(datapath,'Phi_mon.txt'))
       
     if filepath is None:
-        data_dir = os.path.join(os.environ['DBOX'], 'Data\\')
+        data_dir = _setup_dirs_()
         filepath = os.path.join(data_dir, 'Phi_mon.txt')
         
     valid_lines=[]
@@ -1321,4 +1338,3 @@ def Vlat_from_SBW(yrs, min_yrs, SBwidth, plotnow = False):
                 fontsize = 14, transform=ax.transAxes, backgroundcolor = 'w')
         
     return Vband, lats, inclination
-

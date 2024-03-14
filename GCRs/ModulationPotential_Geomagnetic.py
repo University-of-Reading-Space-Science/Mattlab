@@ -15,22 +15,32 @@ import os as os
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 
-import helio_time as htime
-import sunspots 
-import mplot
+import conversions.helio_time as htime
+import sunspots.sunspots as sunspots 
+import plotting.mplot as mplot
 
 confid_level = 0.68
 
 updatenow = False
-plt.rcParams.update({'font.size': 12})
-hfont = {'fontname':'Tahoma'}
+# Update font size
+plt.rcParams.update({
+    'font.size': 12,
+    'axes.labelsize': 12,   # Font size for axis labels
+    'xtick.labelsize': 12,  # Font size for x-axis tick labels
+    'ytick.labelsize': 12,   # Font size for y-axis tick labels
+    'legend.fontsize': 12
+})
+plt.rcParams.update({'font.family': 'Tahoma'})
+
+fontsize = 12
 
 phase_flip = 0.35 # teh phase at which the polairty reversal is assumed [0.35]
 hcs_flag = 'R_av' #['R_av']
 
-figdir = os.environ['DBOX'] + 'Apps\\Overleaf\\A geomagnetic estimate of heliospheric modulation potential\\figures\\'
+figdir = os.path.join(os.environ['DBOX'], 'Apps','Overleaf',
+                      'A geomagnetic estimate of heliospheric modulation potential','figures')
 
-osffilepath = os.environ['DBOX'] + 'Data\\OSF_OEL2023.csv'
+osffilepath = os.path.join(os.environ['DBOX'], 'Data','OSF_OEL2023.csv')
 
 # <codecell> process the data
 osf_df = pd.read_csv(osffilepath)
@@ -101,14 +111,14 @@ for n in range(0, len(hcs_spe[0,:])):
         ax.plot(hcs_phase/(2*np.pi), thishcs, label = 'SC' + str(n-11))
 ax.legend()
 ax.set(ylabel = r'HCS tilt, $\alpha$ [deg]', xlabel = 'Solar cycle phase')
-ax.text(0.03, 0.95, '(a)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.03, 0.95, '(a)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 ax = plt.subplot(2,2,2)   
 ax.fill_between(hcs_phase/(2*np.pi), hcs_spe_avg - hcs_spe_std, hcs_spe_avg + hcs_spe_std,
                  color = 'silver', zorder = 0 )  
 ax.plot(hcs_phase/(2*np.pi), hcs_spe_avg, 'k')  
 ax.set(ylabel = r'HCS tilt, $\alpha$ [deg]', xlabel = 'Solar cycle phase')  
-ax.text(0.03, 0.95, '(b)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.03, 0.95, '(b)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 
 #compute theta prime
@@ -119,7 +129,7 @@ ax = plt.subplot(2,2,3)
 ax.plot(hcs_phase/(2*np.pi), theta_prime*180/np.pi, 'k')  
 ax.set(ylabel = r' $\alpha *$ [deg]', xlabel = 'Solar cycle phase',
        yticks = [0,10,20,30,40,50,60,70,80,90])  
-ax.text(0.03, 0.95, '(c)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.03, 0.95, '(c)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 #compute p_eff
 
@@ -135,10 +145,10 @@ ax.plot(hcs_phase[mask_early]/(2*np.pi),  1* (1- np.sin(theta_prime[mask_early])
 ax.plot(hcs_phase[mask_late]/(2*np.pi), -1*(1 - np.sin(theta_prime[mask_late])), 'b--', label = ' p = -1') 
 
 
-ax.text(0.03, 0.95, '(d)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.03, 0.95, '(d)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 plt.tight_layout()
-fig.savefig(figdir + 'HCStilt.pdf')
+fig.savefig(os.path.join(figdir, 'HCStilt.pdf'))
 
 
 
@@ -208,11 +218,11 @@ fig = plt.figure(figsize = (8,10))
 
 ax = plt.subplot(5,1,1)
 ax.plot(osf_df['datetime'], osf_df['phi_NM'], 'k')
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 xx = ax.get_xlim()
 ax.set_xlim(xx)
 sunspots.PlotAlternateCycles()
-ax.text(0.01, 0.05, '(a)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.01, 0.05, '(a)', transform=plt.gca().transAxes, fontsize=fontsize)
 ax.set_xticklabels([])
 
 ax = plt.subplot(5,1,2)
@@ -222,7 +232,7 @@ ax.set_xlim(xx)
 yy = ax.get_ylim()
 ax.set_ylim([0, yy[1]])
 sunspots.PlotAlternateCycles()
-ax.text(0.01, 0.05, '(b)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.01, 0.05, '(b)', transform=plt.gca().transAxes, fontsize=fontsize)
 ax.set_xticklabels([])
 
 ax = plt.subplot(5,1,3)
@@ -234,7 +244,7 @@ ax.set_xlim(xx)
 ax.set_ylim([3, 15])
 ax.legend(loc = 'upper left', ncol = 3)
 sunspots.PlotAlternateCycles()
-ax.text(0.01, 0.05, '(c)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.01, 0.05, '(c)', transform=plt.gca().transAxes, fontsize=fontsize)
 ax.set_xticklabels([])
 #compute the OSF correlations for teh periods of overlap
 non_nan_indices = osf_df[osf_df['OSF_SSN'].notna() & 
@@ -247,8 +257,8 @@ rgeo, ngeo = mplot.lin_correl(osf_df['OSF_GEO'].loc[non_nan_indices],
 print('r (OSF_OMNI OSF_SSN) = ' + str(rssn))
 print('r (OSF_OMNI OSF_GEO) = ' + str(rgeo))
 mplot.mengZ(rssn, nssn , rgeo, ngeo)
-ax.text(0.85, 0.85, r'$r_L$ = ' + "{:.3f}".format(rssn), color = 'b', transform=plt.gca().transAxes, fontsize=12)
-ax.text(0.85, 0.70, r'$r_L$ = ' + "{:.3f}".format(rgeo), color = 'k', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.85, 0.85, r'$r_L$ = ' + "{:.3f}".format(rssn), color = 'b', transform=plt.gca().transAxes, fontsize=fontsize)
+ax.text(0.85, 0.70, r'$r_L$ = ' + "{:.3f}".format(rgeo), color = 'k', transform=plt.gca().transAxes, fontsize=fontsize)
 
 
 ax = plt.subplot(5,1,4)
@@ -260,7 +270,7 @@ ax.set_ylim([0,90])
 ax.set_yticks([0,30,60,90])
 ax.legend(loc = 'upper left', ncol = 2)
 sunspots.PlotAlternateCycles()
-ax.text(0.01, 0.05, '(d)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.01, 0.05, '(d)', transform=plt.gca().transAxes, fontsize=fontsize)
 ax.set_xticklabels([])
 
 # ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
@@ -274,17 +284,17 @@ ax.plot(osf_df['datetime'], polarity, 'k')
 ax.set_ylabel(r'Polarity, $p$')
 ax.set_xlim(xx)
 sunspots.PlotAlternateCycles()
-ax.text(0.01, 0.05, '(e)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.01, 0.05, '(e)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 
 ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
 color = 'tab:red'
-ax2.set_ylabel(r"$p* = 1 - p \sin (\alpha *)$", color='r')  # we already handled the x-label with ax1
+ax2.set_ylabel(r"$p* = p (1 - \sin \alpha *)$", color='r')  # we already handled the x-label with ax1
 ax2.plot(osf_df['datetime'], peff, color='r')
 ax2.tick_params(axis='y', labelcolor='r')
 
 
-fig.savefig(figdir + 'data_summary.pdf')
+fig.savefig(os.path.join(figdir , 'data_summary.pdf'))
 
 
 
@@ -399,7 +409,7 @@ ax.plot(osf_df['datetime'], phi_E2016_omni,'b', label = 'OMNI, WSO (A2016)')
 ax.legend(loc = 'lower left')
 yy_ts = ax.get_ylim()
 ax.set_ylim(yy_ts)
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 sunspots.PlotAlternateCycles()
 ax.text(0.05, 0.95, '(a)', transform=plt.gca().transAxes, fontsize=12)
 #add uncertainty range
@@ -416,12 +426,12 @@ ax.plot(phi_E2016_omni, phi, 'ro')
 rE16omni, nE16omni = mplot.lin_correl(phi_E2016_omni, phi)
 maeE16omni = np.nanmean(abs(phi_E2016_omni - phi))
 ax.set_title(r'$r_L$ = ' + "{:.3f}".format(rE16omni) + r'; MAE = ' + "{:.2f}".format(maeE16omni))
-ax.set_ylabel(r'$\Phi$ NM [MV]')
-ax.set_xlabel(r'$\Phi$ OMNI, WSO (A2016) [MV]')
+ax.set_ylabel(r'$\phi$ NM [MV]')
+ax.set_xlabel(r'$\phi$ OMNI, WSO (A2016) [MV]')
 ax.set_ylim(xx_sc); ax.set_xlim(xx_sc)
 #plt.title(r'$r_L$ = ' + "{:.2f}".format(rl[0,1]), fontsize=12) 
 ax.plot(xx_sc,xx_sc,'k--')
-ax.text(0.05, 0.95, '(b)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(b)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 # xrange = xx_sc
 # ax.fill_between(xrange, conf_slope[0] * xrange + conf_intercept[0], 
@@ -475,10 +485,10 @@ ax.set_xlim(xx_ts)
 ax.plot(osf_df['datetime'], phi_new_omni, 'r', label = 'OMNI, WSO (new model)')
 ax.legend(loc = 'lower left')
 ax.set_ylim(yy_ts)
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 ax.set_xlabel('Year')
 sunspots.PlotAlternateCycles()
-ax.text(0.05, 0.95, '(c)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(c)', transform=plt.gca().transAxes, fontsize=fontsize)
 #add uncertainty range
 # ax.fill_between(osf_df['datetime'], conf_slope[0] * phi_new_omni + conf_intercept[0], 
 #                   conf_slope[1] * phi_new_omni + conf_intercept[1], 
@@ -492,11 +502,11 @@ ax.plot(phi_new_omni, phi, 'ro')
 rnew_omni, nnew_omni = mplot.lin_correl(phi_new_omni, phi)
 maenew_omni = np.nanmean(abs(phi_new_omni - phi))
 ax.set_title(r'$r_L$ = ' + "{:.3f}".format(rnew_omni) + r'; MAE = ' + "{:.2f}".format(maenew_omni))
-ax.set_ylabel(r'$\Phi$ NM [MV]')
-ax.set_xlabel(r'$\Phi$ OMNI, WSO (new model) [MV]')
+ax.set_ylabel(r'$\phi$ NM [MV]')
+ax.set_xlabel(r'$\phi$ OMNI, WSO (new model) [MV]')
 ax.set_ylim(xx_sc); ax.set_xlim(xx_sc)
 ax.plot(xx_sc,xx_sc,'k--')
-ax.text(0.05, 0.95, '(d)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(d)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 # xrange = xx_sc
 # ax.fill_between(xrange, conf_slope[0] * xrange + conf_intercept[0], 
@@ -508,7 +518,7 @@ p, regressparams = mplot.lin_regress(phi_new_omni, phi, confid_level = confid_le
 plt.tight_layout()
 
 
-fig.savefig(figdir + 'model_OMNI.pdf')
+fig.savefig(os.path.join(figdir, 'model_OMNI.pdf'))
 
 
 
@@ -565,9 +575,9 @@ ax.plot(osf_df['datetime'], phi_E2016_omni,'b', label = 'OMNI (A2016)')
 ax.legend(loc = 'lower left')
 yy_ts = ax.get_ylim()
 ax.set_ylim(yy_ts)
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 sunspots.PlotAlternateCycles()
-ax.text(0.05, 0.95, '(a)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(a)', transform=plt.gca().transAxes, fontsize=fontsize)
 #add uncertainty range
 # ax.fill_between(osf_df['datetime'], conf_slope[0] * phi_E2016_omni + conf_intercept[0], 
 #                   conf_slope[1] * phi_E2016_omni + conf_intercept[1], 
@@ -582,12 +592,12 @@ ax.plot(phi_E2016_omni, phi, 'ro')
 rE16omni, nE16omni = mplot.lin_correl(phi_E2016_omni, phi)
 maeE16omni = np.nanmean(abs(phi_E2016_omni - phi))
 ax.set_title(r'$r_L$ = ' + "{:.3f}".format(rE16omni) + r'; MAE = ' + "{:.2f}".format(maeE16omni))
-ax.set_ylabel(r'$\Phi$ NM [MV]')
-ax.set_xlabel(r'$\Phi$ OMNI (A2016) [MV]')
+ax.set_ylabel(r'$\phi$ NM [MV]')
+ax.set_xlabel(r'$\phi$ OMNI (A2016) [MV]')
 ax.set_ylim(xx_sc); ax.set_xlim(xx_sc)
 #plt.title(r'$r_L$ = ' + "{:.2f}".format(rl[0,1]), fontsize=12) 
 ax.plot(xx_sc,xx_sc,'k--')
-ax.text(0.05, 0.95, '(b)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(b)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 # xrange = xx_sc
 # ax.fill_between(xrange, conf_slope[0] * xrange + conf_intercept[0], 
@@ -632,10 +642,10 @@ ax.set_xlim(xx_ts)
 ax.plot(osf_df['datetime'], phi_new_omni, 'r', label = 'OMNI (new model)')
 ax.legend(loc = 'lower left')
 ax.set_ylim(yy_ts)
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 ax.set_xlabel('Year')
 sunspots.PlotAlternateCycles()
-ax.text(0.05, 0.95, '(c)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(c)', transform=plt.gca().transAxes, fontsize=fontsize)
 #add uncertainty range
 # ax.fill_between(osf_df['datetime'], conf_slope[0] * phi_new_omni + conf_intercept[0], 
 #                   conf_slope[1] * phi_new_omni + conf_intercept[1], 
@@ -649,11 +659,11 @@ ax.plot(phi_new_omni, phi, 'ro')
 rnew_omni, nnew_omni = mplot.lin_correl(phi_new_omni, phi)
 maenew_omni = np.nanmean(abs(phi_new_omni - phi))
 ax.set_title(r'$r_L$ = ' + "{:.3f}".format(rnew_omni) + r'; MAE = ' + "{:.2f}".format(maenew_omni))
-ax.set_ylabel(r'$\Phi$ NM [MV]')
-ax.set_xlabel(r'$\Phi$ OSF (new model) [MV]')
+ax.set_ylabel(r'$\phi$ NM [MV]')
+ax.set_xlabel(r'$\phi$ OSF (new model) [MV]')
 ax.set_ylim(xx_sc); ax.set_xlim(xx_sc)
 ax.plot(xx_sc,xx_sc,'k--')
-ax.text(0.05, 0.95, '(d)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(d)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 # xrange = xx_sc
 # ax.fill_between(xrange, conf_slope[0] * xrange + conf_intercept[0], 
@@ -665,7 +675,7 @@ p, regressparams = mplot.lin_regress(phi_new_omni, phi, confid_level = confid_le
 plt.tight_layout()
 
 
-fig.savefig(figdir + 'model_OMNI_averageHCS.pdf')
+fig.savefig(os.path.join(figdir, 'model_OMNI_averageHCS.pdf'))
 
 
 mplot.mengZ(rE16omni, nE16omni , rnew_omni, nnew_omni)
@@ -716,9 +726,9 @@ ax.plot(osf_df['datetime'], phi_E2016_geo,'b', label = 'GEO (A2016)')
 ax.legend()
 yy_ts = ax.get_ylim()
 ax.set_ylim(yy_ts)
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 sunspots.PlotAlternateCycles()
-ax.text(0.05, 0.95, '(a)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(a)', transform=plt.gca().transAxes, fontsize=fontsize)
 #add uncertainty range
 # ax.fill_between(osf_df['datetime'], conf_slope[0] * phi_E2016_geo + conf_intercept[0], 
 #                   conf_slope[1] * phi_E2016_geo + conf_intercept[1], 
@@ -733,12 +743,12 @@ ax.plot(phi_E2016_geo, phi, 'ro')
 rE16_geo, nE16geo = mplot.lin_correl(phi_E2016_geo, phi)
 maeE16_geo = np.nanmean(abs(phi_E2016_geo - phi))
 ax.set_title(r'$r_L$ = ' + "{:.3f}".format(rE16_geo) + r'; MAE = ' + "{:.2f}".format(maeE16_geo))
-ax.set_ylabel(r'$\Phi$ NM [MV]')
-ax.set_xlabel(r'$\Phi$ GEO (A2016) [MV]')
+ax.set_ylabel(r'$\phi$ NM [MV]')
+ax.set_xlabel(r'$\phi$ GEO (A2016) [MV]')
 ax.set_ylim(xx_sc); ax.set_xlim(xx_sc)
 #plt.title(r'$r_L$ = ' + "{:.2f}".format(rl[0,1]), fontsize=12) 
 ax.plot(xx_sc,xx_sc,'k--')
-ax.text(0.05, 0.95, '(b)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(b)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 # xrange = xx_sc
 # ax.fill_between(xrange, conf_slope[0] * xrange + conf_intercept[0], 
@@ -789,10 +799,10 @@ ax.set_xlim(xx_ts)
 ax.plot(osf_df['datetime'], phi_new_geo, 'r', label = 'GEO (new model)')
 ax.legend()
 ax.set_ylim(yy_ts)
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 ax.set_xlabel('Year')
 sunspots.PlotAlternateCycles()
-ax.text(0.05, 0.95, '(c)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(c)', transform=plt.gca().transAxes, fontsize=fontsize)
 #add uncertainty range
 # ax.fill_between(osf_df['datetime'], conf_slope[0] * phi_new_geo + conf_intercept[0], 
 #                   conf_slope[1] * phi_new_geo + conf_intercept[1], 
@@ -802,16 +812,15 @@ ax.fill_between(osf_df['datetime'], phi_new_geo - prob_int_new,
                   color='pink', alpha = 1)
 
 ax = plt.subplot(2,2,4)
-ax.plot(phi_new_geo[mask_ppos], yvals[mask_ppos], 'ro')
-ax.plot(phi_new_geo[mask_pneg], yvals[mask_pneg], 'ro')
+ax.plot(phi_new_geo, yvals, 'ro')
 rnew_geo, nnew_geo = mplot.lin_correl(phi_new_geo, yvals)
 maenew_geo = np.nanmean(abs(phi_new_geo - yvals))
 ax.set_title(r'$r_L$ = ' + "{:.3f}".format(rnew_geo) + r'; MAE = ' + "{:.2f}".format(maenew_geo))
-ax.set_ylabel(r'$\Phi$ NM [MV]')
-ax.set_xlabel(r'$\Phi$ GEO (new model) [MV]')
+ax.set_ylabel(r'$\phi$ NM [MV]')
+ax.set_xlabel(r'$\phi$ GEO (new model) [MV]')
 ax.set_ylim(xx_sc); ax.set_xlim(xx_sc)
 ax.plot(xx_sc,xx_sc,'k--')
-ax.text(0.05, 0.95, '(d)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(d)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 # xrange = xx_sc
 # ax.fill_between(xrange, conf_slope[0] * xrange + conf_intercept[0], 
@@ -822,7 +831,7 @@ p, regressparams = mplot.lin_regress(phi_new_geo, phi, confid_level = confid_lev
 
 plt.tight_layout()
 
-fig.savefig(figdir + 'model_geo.pdf')
+fig.savefig(os.path.join(figdir, 'model_geo.pdf'))
 
 mplot.mengZ(rE16_geo, nE16geo , rnew_geo, nnew_geo )
 
@@ -873,9 +882,9 @@ ax.plot(osf_df['datetime'], phi_E2016_sn,'b', label = 'SN (A2016)')
 ax.legend()
 yy_ts = ax.get_ylim()
 ax.set_ylim(yy_ts)
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 sunspots.PlotAlternateCycles()
-ax.text(0.05, 0.95, '(a)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(a)', transform=plt.gca().transAxes, fontsize=fontsize)
 #add uncertainty range
 # ax.fill_between(osf_df['datetime'], conf_slope[0] * phi_E2016_geo + conf_intercept[0], 
 #                   conf_slope[1] * phi_E2016_geo + conf_intercept[1], 
@@ -890,12 +899,12 @@ ax.plot(phi_E2016_sn, yvals, 'ro')
 rE16_sn, n = mplot.lin_correl(phi_E2016_sn, yvals)
 maeE16_sn = np.nanmean(abs(phi_E2016_sn - yvals))
 ax.set_title(r'$r_L$ = ' + "{:.3f}".format(rE16_sn) + r'; MAE = ' + "{:.2f}".format(maeE16_sn))
-ax.set_ylabel(r'$\Phi$ NM [MV]')
-ax.set_xlabel(r'$\Phi$ SN (A2016) [MV]')
+ax.set_ylabel(r'$\phi$ NM [MV]')
+ax.set_xlabel(r'$\phi$ SN (A2016) [MV]')
 ax.set_ylim(xx_sc); ax.set_xlim(xx_sc)
 #plt.title(r'$r_L$ = ' + "{:.2f}".format(rl[0,1]), fontsize=12) 
 ax.plot(xx_sc,xx_sc,'k--')
-ax.text(0.05, 0.95, '(b)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(b)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 # xrange = xx_sc
 # ax.fill_between(xrange, conf_slope[0] * xrange + conf_intercept[0], 
@@ -946,10 +955,10 @@ ax.set_xlim(xx_ts)
 ax.plot(osf_df['datetime'], phi_new_sn, 'r', label = 'SN (new model)')
 ax.legend()
 ax.set_ylim(yy_ts)
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 ax.set_xlabel('Year')
 sunspots.PlotAlternateCycles()
-ax.text(0.05, 0.95, '(c)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(c)', transform=plt.gca().transAxes, fontsize=fontsize)
 #add uncertainty range
 # ax.fill_between(osf_df['datetime'], conf_slope[0] * phi_new_geo + conf_intercept[0], 
 #                   conf_slope[1] * phi_new_geo + conf_intercept[1], 
@@ -959,16 +968,15 @@ ax.fill_between(osf_df['datetime'], phi_new_sn - prob_int_new_sn,
                   color='pink', alpha = 1)
 
 ax = plt.subplot(2,2,4)
-ax.plot(phi_new_sn[mask_ppos], phi[mask_ppos], 'ro')
-ax.plot(phi_new_sn[mask_pneg], phi[mask_pneg], 'ro')
+ax.plot(phi_new_sn, phi, 'ro')
 rnew_sn, n = mplot.lin_correl(phi_new_sn, yvals)
 maenew_sn = np.nanmean(abs(phi_new_sn - yvals))
 ax.set_title(r'$r_L$ = ' + "{:.3f}".format(rnew_sn) + r'; MAE = ' + "{:.2f}".format(maenew_sn))
-ax.set_ylabel(r'$\Phi$ NM [MV]')
-ax.set_xlabel(r'$\Phi$ SN (new model) [MV]')
+ax.set_ylabel(r'$\phi$ NM [MV]')
+ax.set_xlabel(r'$\phi$ SN (new model) [MV]')
 ax.set_ylim(xx_sc); ax.set_xlim(xx_sc)
 ax.plot(xx_sc,xx_sc,'k--')
-ax.text(0.05, 0.95, '(d)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.05, 0.95, '(d)', transform=plt.gca().transAxes, fontsize=fontsize)
 
 # xrange = xx_sc
 # ax.fill_between(xrange, conf_slope[0] * xrange + conf_intercept[0], 
@@ -979,7 +987,7 @@ p, regressparams = mplot.lin_regress(phi_new_sn, phi, confid_level = confid_leve
 
 plt.tight_layout()
 
-fig.savefig(figdir + 'model_ssn.pdf')
+fig.savefig(os.path.join(figdir, 'model_ssn.pdf'))
 
 # <codecell> put the relevant data into a DataFrame and save
 phi_df = osf_df[['fracyear','mjd','B_GEO', 'V_GEO', 'OSF_GEO' ]].copy()
@@ -995,7 +1003,7 @@ mask = phi_df['fracyear'] < 1845
 phi_df.drop(phi_df.index[mask], inplace=True)
 
 #save the data
-outputfilepath = os.environ['DBOX'] + 'Data\\HMP_GEO_O2023.csv'
+outputfilepath = os.path.join( os.environ['DBOX'], 'Data','HMP_GEO_O2023.csv')
 phi_df.to_csv(outputfilepath, index=False, na_rep='nan')
 
 # <codecell> Apply model to OSF(GEO)
@@ -1006,8 +1014,18 @@ phi_IC = sunspots.load_oulu_phi_extended(filepath = None, download_now = updaten
 IC_1y = phi_IC.resample('1Y', on='datetime').mean() 
 IC_1y['datetime'] = htime.mjd2datetime(IC_1y['mjd'].to_numpy())
 IC_1y.reset_index(drop=True, inplace=True)
+IC_1y['U2017'] = np.interp(IC_1y['mjd'], osf_df['mjd'], osf_df['phi_NM'])
 
-#load the 14C Phi
+
+
+#scale the 2011 NM estimates to the 2017 values, as they use a different LIS
+plt.figure()
+p_nm, nm_regressparamsnewsn = mplot.lin_regress(IC_1y['phi_NM'], IC_1y['U2017'], 
+                                               plotnow = True, confid_level = confid_level)
+IC_1y['phi_NM_scaled'] = p_nm[0]*IC_1y['phi_NM'] + p_nm[1]
+
+
+#load the 14C phi
 carbon = sunspots.load_14C_phi()
 
 
@@ -1022,10 +1040,10 @@ ax = plt.subplot(3,1,1)
 ax.plot(osf_df['datetime'], phi_new_geo, 'r', label = 'GEO (O2024)')
 ax.plot(osf_df['datetime'], phi, 'k', label = 'NM (U2017)')
 plt.legend(loc = 'upper left')
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 ax.set_ylim([0,ymax])
 sunspots.PlotAlternateCycles()
-ax.text(0.01, 0.05, '(a)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.01, 0.05, '(a)', transform=plt.gca().transAxes, fontsize=fontsize)
 xx = ax.get_xlim()
 ax.set_xlim(xx)
 
@@ -1046,13 +1064,13 @@ mask_nm = IC_1y['fracyear'] >= 1951
 ax = plt.subplot(3,1,2)
 #ax.plot(osf_df['datetime'], phi_E2016_geo, 'b', label = 'OSF(GEO) A2016')
 ax.plot(osf_df['datetime'], phi_new_geo, 'r', label = 'GEO (O2024)')
-ax.plot(IC_1y.loc[mask_nm,'datetime'], IC_1y.loc[mask_nm, 'phi_NM'], 'k', label = 'NM (U2011)')
-ax.plot(IC_1y.loc[mask_ic,'datetime'], IC_1y.loc[mask_ic, 'phi_NM'], 'b', label = 'IC (U2011)')
+ax.plot(IC_1y.loc[mask_nm,'datetime'], IC_1y.loc[mask_nm, 'phi_NM_scaled'], 'k', label = 'NM (U2011)*')
+ax.plot(IC_1y.loc[mask_ic,'datetime'], IC_1y.loc[mask_ic, 'phi_NM_scaled'], 'b', label = 'IC (U2011)*')
 plt.legend(loc = 'upper left')
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 ax.set_ylim([0,ymax])
 sunspots.PlotAlternateCycles()
-ax.text(0.01, 0.05, '(b)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.01, 0.05, '(b)', transform=plt.gca().transAxes, fontsize=fontsize)
 ax.set_xlim(xx)
 
 #add uncertainty range
@@ -1076,7 +1094,7 @@ sunspots.PlotAlternateCycles()
 ax.fill_between(carbon['datetime'], carbon['phi_14C'] - carbon['phi_14C_sigma'], 
                 carbon['phi_14C'] + carbon['phi_14C_sigma'], 
                  color = 'grey', zorder = 0.1, alpha = alpha)  
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 ax.set_xlabel('Year')
 
 #add uncertainty range
@@ -1090,11 +1108,11 @@ ax.fill_between(osf_df['datetime'], phi_new_geo - prob_int_new,
 #                   phi_E2016_geo + prob_int_E2016, 
 #                   color='lightblue', alpha = alpha)
 
-ax.text(0.01, 0.05, '(c)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.01, 0.05, '(c)', transform=plt.gca().transAxes, fontsize=fontsize)
 ax.set_xlim(xx)
 
 
-fig.savefig(figdir + 'model_1845_2020.pdf')
+fig.savefig(os.path.join(figdir, 'model_1845_2020.pdf'))
 
 # <codecell> Produce a "motivation" plot of the current HMP estimtaes
 
@@ -1113,18 +1131,18 @@ sunspots.PlotAlternateCycles()
 ax.fill_between(carbon['datetime'], carbon['phi_14C'] - carbon['phi_14C_sigma'], 
                 carbon['phi_14C'] + carbon['phi_14C_sigma'], 
                  color = 'grey', zorder = 0.1, alpha = alpha)  
-ax.text(0.01, 0.05, '(a)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.01, 0.05, '(a)', transform=plt.gca().transAxes, fontsize=fontsize)
 xx = ax.get_xlim()
 ax.set_xlim(xx)
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 
 
 mask_ic = IC_1y['fracyear'] < 1951
 mask_nm = IC_1y['fracyear'] >= 1951
 
 ax = plt.subplot(2,1,2)
-ax.plot(IC_1y.loc[mask_nm,'datetime'], IC_1y.loc[mask_nm, 'phi_NM'], 'b', label = 'NM (U2011)')
-ax.plot(IC_1y.loc[mask_ic,'datetime'], IC_1y.loc[mask_ic, 'phi_NM'], 'r', label = 'IC (U2011)')
+ax.plot(IC_1y.loc[mask_nm,'datetime'], IC_1y.loc[mask_nm, 'phi_NM_scaled'], 'b', label = 'NM (U2011)*')
+ax.plot(IC_1y.loc[mask_ic,'datetime'], IC_1y.loc[mask_ic, 'phi_NM_scaled'], 'r', label = 'IC (U2011)*')
 ax.plot(carbon['datetime'], carbon['phi_14C'], 'k', label = '14C (B2021)')
 plt.legend(loc = 'upper left')
 ax.set_ylim([0,ymax])
@@ -1133,13 +1151,13 @@ sunspots.PlotAlternateCycles()
 ax.fill_between(carbon['datetime'], carbon['phi_14C'] - carbon['phi_14C_sigma'], 
                 carbon['phi_14C'] + carbon['phi_14C_sigma'], 
                  color = 'grey', zorder = 0.1, alpha = alpha)  
-ax.text(0.01, 0.05, '(b)', transform=plt.gca().transAxes, fontsize=12)
+ax.text(0.01, 0.05, '(b)', transform=plt.gca().transAxes, fontsize=fontsize)
 xx = ax.get_xlim()
 ax.set_xlim(xx)
 ax.set_xlabel('Year')
-ax.set_ylabel(r'$\Phi$ [MV]')
+ax.set_ylabel(r'$\phi$ [MV]')
 
 
 
 
-fig.savefig(figdir + 'HMP_now_summary.pdf')
+fig.savefig(os.path.join(figdir, 'HMP_now_summary.pdf'))
