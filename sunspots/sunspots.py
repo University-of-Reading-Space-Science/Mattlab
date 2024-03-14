@@ -503,7 +503,7 @@ def load_14C_phi(filepath = None):
     #supplied by Ilya from Brehm, NatGeo, 2021
      
     if filepath is None:
-        data_dir = os.path.join(os.environ['DBOX'], 'Data')
+        data_dir = _setup_dirs_()
         filepath = os.path.join(data_dir, 'HMP_14C_Brehm21_FI_all.res')
 
     
@@ -530,7 +530,7 @@ def load_wsa_hcstilt(filepath = None, download_now = True):
             print("Failed to retrieve the webpage.")
 
     if filepath is None:
-        data_dir = os.path.join(os.environ['DBOX'], 'Data')
+        data_dir = _setup_dirs_()
         filepath = os.path.join(data_dir, 'WSO - Computed _Tilt_ Angle of the HCS.html')
         
     with open(filepath,"r") as f:
