@@ -21,26 +21,22 @@ import requests
 from bs4 import BeautifulSoup
 from scipy.interpolate import griddata
 
+#Mattlab files
 import conversions.helio_time as htime
 import conversions.helio_coords as hcoords
 import plotting.mplot as mplot
+import system.system as system
 
 
 # <codecell> Data loaders
 
-def _setup_dirs_():
-    cwd = os.path.abspath(os.path.dirname(__file__))
-    root = os.path.dirname(cwd)
-    datapath = os.path.join(root,'Data')
-    
-    return datapath
 
 def LoadSSN(filepath='null', download_now = False, sminpath = None):
     #(dowload from http://www.sidc.be/silso/DATA/SN_m_tot_V2.0.csv)
     
         
     if filepath == 'null':
-        datapath =  _setup_dirs_()
+        datapath =  system._setup_dirs_()['datapath']
         filepath = os.path.join(datapath,'SN_m_tot_V2.0.csv')
             
     if download_now:
@@ -115,7 +111,7 @@ def LoadSSN(filepath='null', download_now = False, sminpath = None):
     
     #compute phase
     if sminpath is None:
-        datapath =  _setup_dirs_()
+        datapath =  system._setup_dirs_()['datapath']
         sminpath = os.path.join(datapath,'SolarMinTimes.txt')
     smin_df = LoadSolarMinTimes(filepath = sminpath)
     solarmin_mjd = smin_df['mjd'].to_numpy()
@@ -133,7 +129,7 @@ def LoadSSNyr(filepath='null', download_now = False, sminpath = None):
     #(dowload from https://www.sidc.be/SILSO/DATA/SN_y_tot_V2.0.csv)
         
     if filepath == 'null':
-        datapath =  _setup_dirs_()
+        datapath =  system._setup_dirs_()['datapath']
         filepath = os.path.join(datapath,'SN_y_tot_V2.0.csv')
             
     if download_now:
@@ -193,7 +189,7 @@ def LoadSSNyr(filepath='null', download_now = False, sminpath = None):
     
     #compute phase
     if sminpath is None:
-        datapath =  _setup_dirs_()
+        datapath =  system._setup_dirs_()['datapath']
         sminpath = os.path.join(datapath,'SolarMinTimes.txt')
     smin_df = LoadSolarMinTimes(filepath = sminpath)
     solarmin_mjd = smin_df['mjd'].to_numpy()
@@ -211,12 +207,12 @@ def LoadBBgsn(filepath='null', download_now = False):
     #(dowload from https://www.sidc.be/SILSO/DATA/GroupNumber/GNbb2_y.txt)
         
     if filepath == 'null' and download_now:
-        datapath =  _setup_dirs_()
+        datapath =  system._setup_dirs_()['datapath']
         urllib.request.urlretrieve('https://www.sidc.be/SILSO/DATA/GroupNumber/GNbb2_y.txt',
                                    os.path.join(datapath, 'GNbb2_y.txt'))
         
     if filepath == 'null':
-        datapath =  _setup_dirs_()
+        datapath =  system._setup_dirs_()['datapath']
         filepath = os.path.join(datapath,'GNbb2_y.txt')
         
     gsn_df = pd.read_csv(filepath,
@@ -229,16 +225,14 @@ def LoadBBgsn(filepath='null', download_now = False):
     gsn_df['mjd'] = htime.doyyr2mjd(doy,yr)
     
     gsn_df['ssn'] = gsn_df['gsn']*12.28
-        
-        
     
     return gsn_df
 
 def LoadSolarMinTimes(filepath = None):
-    #get the solar minimum times
+    #get the solar minimum times, this file is provided with Mattlab
     
     if filepath is None:
-        datapath =  _setup_dirs_()
+        datapath =  system._setup_dirs_()['datapath']
         filepath = os.path.join(datapath,'SolarMinTimes.txt')
         
     solarmintimes_df = pd.read_csv(filepath,
@@ -258,7 +252,7 @@ def LoadSolarMinTimes(filepath = None):
 def load_usoskin_osf(data_dir = None, download_now = False):
 
     if data_dir is None:
-        data_dir =  _setup_dirs_()
+        data_dir = system._setup_dirs_()['datapath']
         
     osffilepath = os.path.join(data_dir,'Usoskin2023_osf.dat')
     ssnfilepath = os.path.join(data_dir,'Usoskin2023_ssn.dat')
@@ -302,7 +296,7 @@ def load_oulu_nm(filepath = None):
     
     
     if filepath is None:
-        data_dir =  _setup_dirs_()
+        data_dir =  system._setup_dirs_()['datapath']
         filepath = os.path.join(data_dir, 'OULU.dat')
         
     # Define a custom converter function for the date and time columns
@@ -337,12 +331,12 @@ def load_oulu_phi(filepath = None, download_now = True):
     #monitor data, at: https://cosmicrays.oulu.fi/phi/Phi_Table_2017.txt
     
     if download_now:
-        datapath =  _setup_dirs_()
+        datapath =  system._setup_dirs_()['datapath']
         urllib.request.urlretrieve('https://cosmicrays.oulu.fi/phi/Phi_Table_2017.txt',
                                    os.path.join(datapath,'Phi_Table_2017.txt'))
       
     if filepath is None:
-        data_dir =  _setup_dirs_()
+        data_dir =  system._setup_dirs_()['datapath']
         filepath = os.path.join(data_dir, 'Phi_Table_2017.txt')
         
     valid_lines=[]
@@ -419,12 +413,12 @@ def load_oulu_phi_extended(filepath = None, download_now = True):
     #monitor + ionisation chamber(?) data, at: https://cosmicrays.oulu.fi/phi/Phi_mon.txt
     
     if download_now:
-        datapath =  _setup_dirs_()
+        datapath =  system._setup_dirs_()['datapath']
         urllib.request.urlretrieve('https://cosmicrays.oulu.fi/phi/Phi_mon.txt',
                                    os.path.join(datapath,'Phi_mon.txt'))
       
     if filepath is None:
-        data_dir = _setup_dirs_()
+        data_dir = system._setup_dirs_()
         filepath = os.path.join(data_dir, 'Phi_mon.txt')
         
     valid_lines=[]
@@ -503,7 +497,7 @@ def load_14C_phi(filepath = None):
     #supplied by Ilya from Brehm, NatGeo, 2021
      
     if filepath is None:
-        data_dir = _setup_dirs_()
+        data_dir = system._setup_dirs_()['datapath']
         filepath = os.path.join(data_dir, 'HMP_14C_Brehm21_FI_all.res')
 
     
@@ -530,7 +524,7 @@ def load_wsa_hcstilt(filepath = None, download_now = True):
             print("Failed to retrieve the webpage.")
 
     if filepath is None:
-        data_dir = _setup_dirs_()
+        data_dir = system._setup_dirs_()['datapath']
         filepath = os.path.join(data_dir, 'WSO - Computed _Tilt_ Angle of the HCS.html')
         
     with open(filepath,"r") as f:
@@ -585,7 +579,8 @@ def PlotAlternateCycles(solarmintimes_df = None):
             rect = patches.Rectangle((solarmintimes_df['datetime'][i],yy[0]),
                                      solarmintimes_df['datetime'][i+1]-solarmintimes_df['datetime'][i],
                                      yy[1]-yy[0],edgecolor='none',facecolor='lightgrey',zorder=0)
-            plt.gca().add_patch(rect)       
+            plt.gca().add_patch(rect)      
+            
 # <codecell> General solar cycle functions
 def compute_phase_SPE(mjd, param, solarmin_mjd = None,
                       nphase = 11, plotnow = True):
