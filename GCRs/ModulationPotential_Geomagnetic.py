@@ -18,19 +18,11 @@ from scipy.optimize import minimize
 import conversions.helio_time as htime
 import sunspots.sunspots as sunspots 
 import plotting.mplot as mplot
+import system.system as system
 
 confid_level = 0.68
 
 updatenow = False
-# Update font size
-plt.rcParams.update({
-    'font.size': 12,
-    'axes.labelsize': 12,   # Font size for axis labels
-    'xtick.labelsize': 12,  # Font size for x-axis tick labels
-    'ytick.labelsize': 12,   # Font size for y-axis tick labels
-    'legend.fontsize': 12
-})
-plt.rcParams.update({'font.family': 'Tahoma'})
 
 fontsize = 12
 
@@ -41,6 +33,10 @@ figdir = os.path.join(os.environ['DBOX'], 'Apps','Overleaf',
                       'A geomagnetic estimate of heliospheric modulation potential','figures')
 
 osffilepath = os.path.join(os.environ['DBOX'], 'Data','OSF_OEL2023.csv')
+
+#set plot defaults
+system.plot_defaults()
+
 
 # <codecell> process the data
 osf_df = pd.read_csv(osffilepath)

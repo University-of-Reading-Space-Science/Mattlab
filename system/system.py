@@ -9,7 +9,7 @@ System functions
 """
 
 import os as os
-
+import matplotlib.pyplot as plt
 
 
 def _setup_dirs_():
@@ -22,3 +22,14 @@ def _setup_dirs_():
     dirs['root'] = root
     
     return dirs
+
+def plot_defaults():
+    # Update font size
+    plt.rcParams.update({
+        'font.size': 12,
+        'axes.labelsize': 12,   # Font size for axis labels
+        'xtick.labelsize': 12,  # Font size for x-axis tick labels
+        'ytick.labelsize': 12,   # Font size for y-axis tick labels
+        'legend.fontsize': 12
+    })
+    plt.rcParams.update({'font.family': 'Tahoma'})

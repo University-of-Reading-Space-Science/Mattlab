@@ -19,12 +19,15 @@ import os as os
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-os.chdir(os.path.abspath(os.environ['DBOX'] + '\\python'))
-import helio_coords as hcoord
-import helio_time as htime 
 
-data_dir = os.environ['DBOX'] + 'Data_hdf5\\'
-save_dir = os.environ['DBOX'] + 'Papers_WIP\\_coauthor\\ManuelaTemmer\\'
+
+#import helio_coords as hcoord
+import conversions.helio_time as htime 
+import sunspots.sunspots as sunspots
+import conversions.averaging as averaging
+
+data_dir = os.path.join(os.environ['DBOX'], 'Data_hdf5')
+save_dir = os.path.join(os.environ['DBOX'], 'Papers_WIP','_coauthor','ManuelaTemmer')
 br_window = '20H'
 rolling_window_days_long = 365
 rolling_window_days_short = 27
@@ -37,60 +40,65 @@ hfont = {'fontname':'Tahoma'}
 AU=149598000
 
 #load the data
-omni_1hour = pd.read_hdf(data_dir + 'omni_1hour.h5')
+omni_1hour = pd.read_hdf(os.path.join(data_dir, 'omni_1hour.h5'))
+dt = omni_1hour['datetime'].to_numpy()
+dt_datetime = np.array([np.datetime_as_string(x, unit='s') for x in dt], dtype='datetime64[s]').astype(datetime.datetime)
+omni_1hour['mjd'] = htime.datetime2mjd(dt_datetime)
 
 omni_brwindow_nans = omni_1hour.resample(br_window, on='datetime').mean() 
 #omni_brwindow_nans['datetime'] = htime.mjd2datetime(omni_brwindow_nans['mjd'].to_numpy())
-#omni_brwindow_nans.reset_index(drop=True, inplace=True)
+omni_brwindow_nans.reset_index(inplace=True)
+
 
 #compute the constant to convert |Br| at 1 AU to total HMF
 Fconst=(1e-3)*4*np.pi*AU*AU/(1e14)
 
 omni_brwindow_nans['OSF (x10^14 Wb)'] = np.abs(omni_brwindow_nans['Bx_gse']) * Fconst
 
-osf_1d = pd.DataFrame(index = omni_brwindow_nans.index)
-osf_1d['OSF (x10^14 Wb)'] = omni_brwindow_nans['OSF (x10^14 Wb)']
-osf_1d['MJD'] = omni_brwindow_nans['mjd']
+# osf_1d = pd.DataFrame(index = omni_brwindow_nans.index)
+# osf_1d['OSF (x10^14 Wb)'] = omni_brwindow_nans['OSF (x10^14 Wb)']
+# osf_1d['MJD'] = omni_brwindow_nans['mjd']
 
-
+osf_1d = omni_brwindow_nans.copy()
 
 
 #dowload the sunspot data from http://www.sidc.be/silso/DATA/SN_m_tot_V2.0.csv
-filepath= os.environ['DBOX'] + 'Data\\SN_m_tot_V2.0.csv'
-col_specification =[(0, 4), (5, 7), (8,16),(17,23),(24,29),(30,35)]
-ssn=pd.read_fwf(filepath, colspecs=col_specification,header=None)
-dfdt=[]
-for i in range(0,len(ssn)):
-    dfdt.append(datetime.datetime(ssn[0][i],ssn[1][i],15))
-#replace the index with the datetime objects
-ssn.index=dfdt
-ssn['ssn']=ssn[3]
+ssn = sunspots.LoadSSN()
 
-#TSO data from https://spot.colorado.edu/~koppg/TSI/TSI_Composite-SIST.txt
-filepath= os.environ['DBOX'] + 'Data\\TSI_Composite-SIST.txt'
-tsi = pd.read_csv(filepath, delim_whitespace=True, header = 35, names=['TSI', 'dTSI'])  
-dfdt = htime.jd2datetime(tsi.index.to_numpy()) 
-#replace the index with the datetime objects
-tsi.index=dfdt
+
+# #TSO data from https://spot.colorado.edu/~koppg/TSI/TSI_Composite-SIST.txt
+# filepath= os.environ['DBOX'] + 'Data\\TSI_Composite-SIST.txt'
+# tsi = pd.read_csv(filepath, delim_whitespace=True, header = 35, names=['TSI', 'dTSI'])  
+# dfdt = htime.jd2datetime(tsi.index.to_numpy()) 
+# #replace the index with the datetime objects
+# tsi.index=dfdt
 
 
 
 hour_str_long = str(rolling_window_days_long*24) +'H'
 hour_str_short = str(rolling_window_days_short*24) +'H'
 
-omniavg_long=osf_1d.rolling(hour_str_long, min_periods=int(rolling_window_days_long/4)).mean()
-omniavg_long = omniavg_long.reset_index()
-omniavg_long['datetime'] = omniavg_long['datetime'] - datetime.timedelta(days=rolling_window_days_long/2)
+omniavg_long = osf_1d.copy()
+omniavg_long['OSF (x10^14 Wb)'] = averaging.rolling(omniavg_long['mjd'].to_numpy(), 
+                                                   omniavg_long['OSF (x10^14 Wb)'].to_numpy(),
+                                                   rolling_window_days_long,
+                                                   min_points = rolling_window_days_long/4,
+                                                   method = 'mean')
+omniavg_short = osf_1d.copy()
+omniavg_short['OSF (x10^14 Wb)'] = averaging.rolling(omniavg_long['mjd'].to_numpy(), 
+                                                   omniavg_long['OSF (x10^14 Wb)'].to_numpy(),
+                                                   rolling_window_days_short,
+                                                   min_points = 2,
+                                                   method = 'mean')
 
-omniavg_short=osf_1d.rolling(hour_str_short, min_periods=int(rolling_window_days_short/4)).mean()
-omniavg_short= omniavg_short.reset_index()
-omniavg_short['datetime'] = omniavg_short['datetime'] - datetime.timedelta(days=rolling_window_days_short/2)
-
-ssnavg=ssn.rolling(hour_str_long, min_periods=int(rolling_window_days_long//30/4)).mean()
-ssnavg.index = ssnavg.index - datetime.timedelta(days=rolling_window_days_long/2)
-
-tsiavg=tsi.rolling(hour_str_long, min_periods=int(rolling_window_days_long//30/4)).mean()
-tsiavg.index = tsiavg.index - datetime.timedelta(days=rolling_window_days_long/2)
+ssnavg = ssn.copy()
+ssnavg['ssn'] = averaging.rolling(ssn['mjd'].to_numpy(), 
+                                                   ssn['ssn'].to_numpy(),
+                                                   rolling_window_days_long,
+                                                   min_points = 1,
+                                                   method = 'mean')
+# tsiavg=tsi.rolling(hour_str_long, min_periods=int(rolling_window_days_long//30/4)).mean()
+# tsiavg.index = tsiavg.index - datetime.timedelta(days=rolling_window_days_long/2)
 
 
 import matplotlib.dates as mdates
@@ -108,8 +116,8 @@ minor_locator = AutoMinorLocator(2)
 fig, ax1 = plt.subplots(figsize=(10, 5))
 ax2 = ax1.twinx()
 
-d = ssnavg.index.values
-ax1.fill_between(d,0,ssnavg['ssn'],facecolor='silver')
+
+ax1.fill_between(ssnavg['datetime'],0,ssnavg['ssn'],facecolor='silver')
 ax1.set_ylabel('Sunspot number', fontsize=16,**hfont)
 ax1.set_xlim(omniavg_long['datetime'][0], 
              omniavg_long['datetime'][len(omniavg_long)-1] + datetime.timedelta(days=rolling_window_days_long/2))
@@ -148,8 +156,8 @@ ax2.set_ylim(0,15)
 plt.tight_layout()
 
 
-plt.savefig(save_dir + 'Hflux.png', format='png', dpi=600)
-omniavg_short.to_csv(save_dir + 'OMNI_OSF.dat')
+plt.savefig(os.path.join(save_dir, 'Hflux.png'), format='png', dpi=600)
+omniavg_short.to_csv(os.path.join(save_dir,'OMNI_OSF.dat'))
 
 #
 #
@@ -262,4 +270,4 @@ ax2.set_ylim(0,1400)
 plt.tight_layout()
 
 
-plt.savefig(save_dir + 'TSI.png', format='png', dpi=600)
+plt.savefig(os.path.join(save_dir,'TSI.png'), format='png', dpi=600)
