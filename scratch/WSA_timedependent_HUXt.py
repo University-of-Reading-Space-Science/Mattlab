@@ -19,8 +19,10 @@ import conversions.helio_coords as hcoords
 import plotting.huxt_plots as hplots
 import system.system as system
 
-
+import huxt as H
 import huxt_inputs as Hin
+import huxt_analysis as HA
+
 
 
 #set plot defaults
@@ -145,3 +147,29 @@ ax.text(0.15,1.05,r'$Br [nT]' ,
         fontsize = 11, transform=ax.transAxes, backgroundcolor = 'w')
 cbar = plt.colorbar(pc, ax=ax)
 
+
+# <codecell> run HUXt with the time-dependent boundary condition
+
+runstart = datetime.datetime(2023,1,1)
+runend = datetime.datetime(2023,12,31)
+simtime = (runend-runstart).days * u.day
+r_min = 21.5 *u.solRad
+
+
+
+#set up the model, with (optional) time-dependent bpol boundary conditions
+model = Hin.set_time_dependent_boundary(vlongs.T, mjds, runstart, simtime, 
+                                        r_min=r_min, r_max=250*u.solRad,
+                                        #bgrid_Carr = brlongs.T, 
+                                        dt_scale=10, latitude=0*u.deg,)
+
+#trace a bunch of field lines from a range of evenly spaced Carrington longitudes
+dlon = (20*u.deg).to(u.rad).value
+lon_grid = np.arange(dlon/2, 2*np.pi-dlon/2 + 0.0001, dlon)*u.rad
+
+#give the streakline footpoints (in Carr long) to the solve method
+model.solve([], streak_carr = lon_grid)
+
+HA.plot(model, 12*u.day)
+
+HA.animate(model, tag='HUXt_WSA_2023_time_dependent', duration =60, fps = 20) # This takes about two minutes.
