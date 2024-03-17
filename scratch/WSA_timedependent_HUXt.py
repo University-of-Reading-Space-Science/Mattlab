@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import numpy as np
 import astropy.units as u
+import pandas as pd
 
 
 import conversions.helio_time as htime
@@ -172,4 +173,86 @@ model.solve([], streak_carr = lon_grid)
 
 HA.plot(model, 12*u.day)
 
-HA.animate(model, tag='HUXt_WSA_2023_time_dependent', duration =60, fps = 20) # This takes about two minutes.
+HA.animate(model, tag='HUXt_WSA_2023_time_dependent', duration = 60, fps = 20) # This takes about two minutes.
+
+
+# <codecell> put together 1 to 7-day advance forecasts
+
+# Initialize lists for for1d to for7d
+for_lists = [ [] for _ in range(1, 8) ]
+
+# Initialize lists for tim1d to tim7d
+tim_lists = [ [] for _ in range(1, 8) ]
+
+startdate = datetime.datetime(2023,1,3,0)
+stopdate = datetime.datetime(2024,1,3,0)
+
+forecasttime = startdate
+while forecasttime <=stopdate:
+
+    #get the CR num and cr_lon_init that this corresponds to
+    cr, cr_lon_init = Hin.datetime2huxtinputs(forecasttime)
+    
+    #find the map with this date
+    id_t = np.argmin(np.abs(time - forecasttime))
+    #set up a HUXt run with this boundary condition
+    model = H.HUXt(v_boundary=vlongs[id_t,:]*u.km/u.s, cr_num=cr, cr_lon_init=cr_lon_init,
+                   simtime=7*u.day, dt_scale=4, r_min = 21.5*u.solRad, lon_out=0.0*u.rad)
+    model.solve([])
+    
+    daysec = 24*60*60
+    #convert the model time to MJD
+    tim_mjd = model.time_init.mjd + model.time_out.value/daysec
+    
+    #get conditions at Earth
+    Earth_ts = HA.get_observer_timeseries(model, observer='Earth')
+    
+    #now hack out days of data for the various forecasts
+    for d_advanced in range(0,7):
+        mask = (model.time_out.value >= daysec*d_advanced) & (model.time_out.value < daysec*(d_advanced+1))
+        tim_lists[d_advanced].extend(tim_mjd[mask])
+        for_lists[d_advanced].extend(Earth_ts.loc[mask,'vsw'])
+        
+    #advance the date
+    forecasttime = forecasttime + datetime.timedelta(days=1)
+    
+
+# <codecell> Now compare to 1-hour omni data
+
+from sunpy.net import Fido
+from sunpy.net import attrs
+from sunpy.timeseries import TimeSeries
+
+# Download the 1hr OMNI data from CDAweb
+trange = attrs.Time(startdate, stopdate)
+dataset = attrs.cdaweb.Dataset('OMNI2_H0_MRG1HR')
+result = Fido.search(trange, dataset)
+downloaded_files = Fido.fetch(result)
+
+# Import the OMNI data
+omni = TimeSeries(downloaded_files, concatenate=True)
+data = omni.to_dataframe()
+
+# Set invalid data points to NaN
+id_bad = data['V'] == 9999.0
+data.loc[id_bad, 'V'] = np.NaN
+
+# Create a datetime column
+data['datetime'] = data.index
+data['mjd'] = htime.datetime2mjd(data['datetime'].to_numpy())
+
+
+plt.figure()
+plt.plot(htime.mjd2datetime(np.array(tim_lists[0])), for_lists[0])
+
+plt.plot(data['datetime'], data['V'])
+
+
+plt.figure()
+plt.plot(htime.mjd2datetime(np.array(tim_lists[6])), for_lists[6])
+
+plt.plot(data['datetime'], data['V'])
+
+    
+    
+

@@ -137,12 +137,21 @@ def datetime2jd(dt):
     """
     Convert a datetime to JD. Just a wrapper for date2jd
     datetime2mjd(datetime)
+    
+    Now handles conversion from numpy.datetime64
+    
     Mathew Owens, 15/10/20
 
     """ 
     
+    
     #check whether the input is an array of daetimes or a single instance
-    if isinstance(dt,np.ndarray):
+    if isinstance(dt, np.ndarray):
+        #check if it's numpy.datetime
+        if isinstance(dt[0], np.datetime64):
+            dt = dt.astype(datetime.datetime)
+        
+        
         year=np.vectorize(lambda x: x.year)(dt)
         month=np.vectorize(lambda x: x.month)(dt)
         day=np.vectorize(lambda x: x.day)(dt)
@@ -151,7 +160,7 @@ def datetime2jd(dt):
         second=np.vectorize(lambda x: x.second)(dt)
         microsecond=np.vectorize(lambda x: x.microsecond)(dt)
         jd=date2jd(year,month,day,hour,minute,second,microsecond)
-    elif isinstance(dt,datetime.datetime) or isinstance(dt,pd.core.indexes.datetimes.DatetimeIndex):
+    elif isinstance(dt, datetime.datetime) or isinstance(dt, pd.core.indexes.datetimes.DatetimeIndex):
         jd=date2jd(dt.year,dt.month,dt.day,dt.hour,dt.minute,dt.second,
                    dt.microsecond)
         

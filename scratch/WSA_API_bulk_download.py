@@ -18,8 +18,8 @@ ndays = 1  # download coronal solutions up to this many days prior to the foreca
 ddays = 1  # look for WSA solutions this many days apart
 sleep_time = 2
 
-firstdate = datetime.datetime(2024,1,1,0)
-finaldate = datetime.datetime(2025,1,1,0)
+firstdate = datetime.datetime(2022,1,1,0)
+finaldate = datetime.datetime(2023,1,1,0)
 
 thisdate = firstdate
 
