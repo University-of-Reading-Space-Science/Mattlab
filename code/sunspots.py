@@ -22,10 +22,10 @@ from bs4 import BeautifulSoup
 from scipy.interpolate import griddata
 
 #Mattlab files
-import conversions.helio_time as htime
-import conversions.helio_coords as hcoords
-import plotting.mplot as mplot
-import system.system as system
+import helio_time as htime
+import helio_coords as hcoords
+import mplot as mplot
+import system as system
 
 
 # <codecell> Data loaders

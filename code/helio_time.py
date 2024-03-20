@@ -12,7 +12,9 @@ import numpy as np
 import datetime as datetime
 import pandas as pd
 
-
+def is_scalar(obj):
+    # Check if the object is an instance of any scalar type
+    return isinstance(obj, (int, float, complex, str, bytes))
 
 def date2jd(*args):
     
@@ -346,24 +348,30 @@ def doyyr2fracyear(doy, yr):
     return fracyr
 
 
-def fracyear2mjd(decimal_years):
+def fracyear2mjd(fracyear):
     """
     Converts decimal year to MJD
     Mathew Owens, 15/8/23
     """ 
+    isscalar = is_scalar(fracyear)
     
-    def _decimal_year_to_mjd_(dy):
-        frac_of_yr =  dy - np.floor(dy)
-        yr =  int(np.floor(dy))
-        if isleapyear(yr):
-            doy = frac_of_yr * 366 + 1
-        else:
-            doy = frac_of_yr * 365 + 1
-        mjd = doyyr2mjd(doy, yr)
-        return mjd
+    if isscalar:
+        fracyear = [fracyear]
     
-    vec_decimal_year_to_mjd = np.vectorize(_decimal_year_to_mjd_)
-    mjd = vec_decimal_year_to_mjd(decimal_years) 
+    #separate the int year and the fractional year
+    yr_int = np.floor(fracyear).astype(int)
+    yr_dec = fracyear - yr_int
+    
+    #first check if it's a leap year
+    isleap = isleapyear(yr_int)
+    
+    #compute doy
+    doy = yr_int*0
+    doy[isleap] = np.floor(yr_dec[isleap] * 366 + 1).astype(int)
+    doy[~isleap] = np.floor(yr_dec[~isleap] * 365 + 1).astype(int)
+    
+    #convert to mjd
+    mjd = doyyr2mjd(doy, yr_int)
     
     return mjd
         

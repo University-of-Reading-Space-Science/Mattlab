@@ -33,3 +33,7 @@ def plot_defaults():
         'legend.fontsize': 12
     })
     plt.rcParams.update({'font.family': 'Tahoma'})
+    
+def is_scalar(obj):
+    # Check if the object is an instance of any scalar type
+    return isinstance(obj, (int, float, complex, str, bytes))
