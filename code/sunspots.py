@@ -511,6 +511,36 @@ def load_14C_phi(filepath = None):
     
     return df
 
+
+def load_14C_QL_phi(filepath = None):
+    #function to load the heliospheric modulation potential estimated from 14C
+    #It si the QL estimate that was shown in Brehm, NatGeo, 2021
+     
+    if filepath is None:
+        data_dir = system._setup_dirs_()['datapath']
+        filepath = os.path.join(data_dir, 'HMP_14C_Brehm2021_QL_phi.dat')
+
+    
+    df = pd.read_csv(filepath, sep='\t', 
+                         names=["Year", "phi_14C", "phi_14C_sigma"])
+    #make the year the mid point.
+    df['Year'] = df['Year']
+    df.drop(df.index[0], inplace=True)
+    
+    #average to 1-year resolution
+    df_yr = df.rolling(12).mean()[::12]
+    df_yr.drop(df_yr.index[0], inplace=True)
+    
+    #adjust the timestamp slightly
+    df_yr['Year'] = np.floor(df_yr['Year'])
+    df['Year'] = df['Year'] +0.5
+    
+    #add mjd and datetime
+    df_yr['mjd'] = htime.fracyear2mjd(df_yr['Year'].to_numpy())
+    df_yr['datetime'] = htime.mjd2datetime(df_yr['mjd'].to_numpy())
+    
+    return df_yr
+
 def load_wsa_hcstilt(filepath = None, download_now = True):    
     
     if download_now:
