@@ -402,7 +402,7 @@ def mengZ(r1,n1, r2, n2, printoutput = True):
         
     return p_value
 
-def plotspeedmap(vr_map, vr_longs, vr_lats, fig = None, ax = None):
+def plotspeedmap(vr_map, vr_longs, vr_lats, fig = None, ax = None, plot_colourbar = True):
     # a function to plot a speed map, such as output from WSA or MAS.
     
     
@@ -426,16 +426,19 @@ def plotspeedmap(vr_map, vr_longs, vr_lats, fig = None, ax = None):
     #ax.axes.yaxis.set_ticklabels([])
     plt.sca(ax)
     #colorbar
-    axins = inset_axes(ax,
-                        width="100%",  # width = 50% of parent_bbox width
-                        height="10%",  # height : 5%
-                        loc='upper right',
-                        bbox_to_anchor=(0.28, 0.58, 0.72, 0.5),
-                        bbox_transform=ax.transAxes,
-                        borderpad=0,)
-    cb = fig.colorbar(pc, cax = axins, orientation = 'horizontal',  pad = -0.1)
-    cb.ax.xaxis.set_ticks_position("top")
-    ax.text(0.15,1.05,r'$V_{SW}$ [km/s]' , 
-            fontsize = 11, transform=ax.transAxes, backgroundcolor = 'w')
-    
-    return fig, ax, axins
+    if plot_colourbar:
+        axins = inset_axes(ax,
+                            width="100%",  # width = 50% of parent_bbox width
+                            height="10%",  # height : 5%
+                            loc='upper right',
+                            bbox_to_anchor=(0.28, 0.58, 0.72, 0.5),
+                            bbox_transform=ax.transAxes,
+                            borderpad=0,)
+        cb = fig.colorbar(pc, cax = axins, orientation = 'horizontal',  pad = -0.1)
+        cb.ax.xaxis.set_ticks_position("top")
+        ax.text(0.15,1.05,r'$V_{SW}$ [km/s]' , 
+                fontsize = 11, transform=ax.transAxes, backgroundcolor = 'w')
+    else:
+        axins = np.nan
+        
+    return fig, ax, axins, pc
