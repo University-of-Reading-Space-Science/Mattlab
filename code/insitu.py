@@ -8,22 +8,7 @@ in-situ data anaylsis routines
 """
 
 
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Nov 27 16:12:12 2017
-Updated 6/1/22 to replace df.set_value with df.at
 
-A script to read and process Ian Richardson's ICME list.
-
-Some pre-processing is required:
-    Download the following webpage as a html file: 
-        http://www.srl.caltech.edu/ACE/ASC/DATA/level3/icmetable2.htm
-    Open in Excel, remove the year rows, delete last column (S) which is empty
-    Cut out the data table only (delete header and footer)
-    Save as a CSV.
-
-@author: vy902033
-"""
 import pandas as pd
 import os as os
 import numpy as np
@@ -34,6 +19,18 @@ from datetime import datetime
 import system as system
 
 def ICMElist(filepath = None):
+    # -*- coding: utf-8 -*-
+    """
+    A script to read and process Ian Richardson's ICME list.
+
+    Some pre-processing is required:
+        Download the following webpage as a html file: 
+            http://www.srl.caltech.edu/ACE/ASC/DATA/level3/icmetable2.htm
+        Open in Excel, remove the year rows, delete last column (S) which is empty
+        Cut out the data table only (delete header and footer)
+        Save as a CSV.
+
+    """
     
     if filepath is None:
         datapath =  system._setup_dirs_()['datapath']
