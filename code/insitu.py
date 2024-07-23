@@ -14,6 +14,7 @@ import os as os
 import numpy as np
 import re  #for dealing with non-numeric characters in a string of unknown length
 from datetime import datetime
+import urllib.request
 
 #Mattlab files
 import system as system
@@ -83,4 +84,47 @@ def ICMElist(filepath = None):
     
 #icmes=ICMElist()             
 
-
+def STEREO_ICME_list(filepath = None, download_now = False):
+    """
+    a script to read in Lan Jian's STEREO  ICME list, from:
+    https://stereo-ssc.nascom.nasa.gov/pub/ins_data/impact/level3/LanJian_STEREO_ICME_List.txt
+    """
+    
+    if filepath is None:
+        datapath =  system._setup_dirs_()['datapath']
+        filepath = os.path.join(datapath,
+                                'LanJian_STEREO_ICME_List.txt')
+    
+    if download_now:
+        urllib.request.urlretrieve('https://stereo-ssc.nascom.nasa.gov/pub/ins_data/impact/level3/LanJian_STEREO_ICME_List.txt', 
+                                   filepath)
+    
+    
+    # Read the file, ignoring lines that start with #
+    data = pd.read_csv(filepath, sep='\t', comment='#', header=None)
+    
+    # If you want to assign column names (example names given)
+    data.columns = ["ICME_start", "ICME_end", "magnetic_obstacle_start_time", 
+                    "STEREO", "hybrid_event", "ambiguous_event", "Ptmax_including_sheath", 
+                    "Bmax_including_sheath", "Vmax_including_sheath",
+                    "Ptmax_excluding_sheath", "Bmax_excluding_sheath",
+                    "Vmax_excluding_sheath",
+                    "speed_change", "Group", "magnetic_cloud_index",
+                    "Comment"]
+    
+    #convert to datetime
+    data['ICME_start'] = pd.to_datetime(data['ICME_start'], errors='coerce')
+    data['ICME_end'] = pd.to_datetime(data['ICME_end'], errors='coerce')
+    data['magnetic_obstacle_start_time'] = pd.to_datetime(data['magnetic_obstacle_start_time'], errors='coerce')
+    
+    # # Display rows where datetime conversion failed
+    # invalid_dates = data[data[['ICME_start_time', 'ICME_end_time', 'magnetic_obstacle_start_time']].isnull().any(axis=1)]
+    # if not invalid_dates.empty:
+    #     print("Rows with invalid datetime entries:")
+    #     print(invalid_dates)
+    
+    
+    # Display the first few rows of the dataframe
+    #print(data.head())
+    
+    return data
