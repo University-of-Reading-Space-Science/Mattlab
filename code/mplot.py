@@ -421,14 +421,16 @@ def plotspeedmap(vr_map, vr_longs, vr_lats, fig = None, ax = None,
     if plot_sinelat:
         pc = ax.pcolor(vr_longs.value*180/np.pi, np.sin(vr_lats.value), vr_map.value, 
                shading='auto',vmin=250, vmax=650)
+        ax.set_ylabel('Sine lat')
     else:
         pc = ax.pcolor(vr_longs.value*180/np.pi, vr_lats.value*180/np.pi, vr_map.value, 
                shading='auto',vmin=250, vmax=650)
+        ax.set_ylabel('Latitude [deg]')
 
     ax.set_ylim(ylims); 
     ax.set_xlim([0,360])
     ax.set_xlabel('Carrington Longitude [deg]')
-    ax.set_ylabel('Latitude [deg]')
+
 
 
     ax.axes.xaxis.set_ticks([0,90,180,270,360])
@@ -448,6 +450,60 @@ def plotspeedmap(vr_map, vr_longs, vr_lats, fig = None, ax = None,
         cb = fig.colorbar(pc, cax = axins, orientation = 'horizontal',  pad = -0.1)
         cb.ax.xaxis.set_ticks_position("top")
         ax.text(0.15,1.05,r'$V_{SW}$ [km/s]' , 
+                fontsize = 11, transform=ax.transAxes, backgroundcolor = 'w')
+    else:
+        axins = np.nan
+        
+    return fig, ax, axins, pc
+
+def plotbrmap(br_map, br_longs, br_lats, fig = None, ax = None, 
+                 plot_colourbar = True, plot_sinelat = False):
+    # a function to plot a speed map, such as output from WSA or MAS.
+    
+    if fig == None:
+        fig = plt.figure(figsize = (9,4.5))
+    
+    if ax == None:
+        ax = plt.subplot(1,1,1)
+    
+    ylims = [-90,90]
+    yticks = [-90,-45,0,45,90]
+    if plot_sinelat:
+        ylims = [-1, 1]
+        yticks = [-1,-0.5,0,0.5,1]
+
+    if plot_sinelat:
+        pc = ax.pcolor(br_longs.value*180/np.pi, np.sin(br_lats.value), br_map, 
+               shading='auto',vmin=-10, vmax=10)
+        ax.set_ylabel('Sine lat')
+    else:
+        pc = ax.pcolor(br_longs.value*180/np.pi, br_lats.value*180/np.pi, br_map, 
+               shading='auto',vmin=-10, vmax=10)
+        ax.set_ylabel('Latitude [deg]')
+
+    ax.set_ylim(ylims); 
+    ax.set_xlim([0,360])
+    ax.set_xlabel('Carrington Longitude [deg]')
+    
+
+
+    ax.axes.xaxis.set_ticks([0,90,180,270,360])
+    ax.axes.yaxis.set_ticks(yticks)
+    #ax.axes.xaxis.set_ticklabels([])
+    #ax.axes.yaxis.set_ticklabels([])
+    plt.sca(ax)
+    #colorbar
+    if plot_colourbar:
+        axins = inset_axes(ax,
+                            width="100%",  # width = 50% of parent_bbox width
+                            height="10%",  # height : 5%
+                            loc='upper right',
+                            bbox_to_anchor=(0.28, 0.58, 0.72, 0.5),
+                            bbox_transform=ax.transAxes,
+                            borderpad=0,)
+        cb = fig.colorbar(pc, cax = axins, orientation = 'horizontal',  pad = -0.1)
+        cb.ax.xaxis.set_ticks_position("top")
+        ax.text(0.15,1.05,r'$B_{R}$ ' , 
                 fontsize = 11, transform=ax.transAxes, backgroundcolor = 'w')
     else:
         axins = np.nan
