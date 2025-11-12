@@ -402,10 +402,12 @@ def mengZ(r1,n1, r2, n2, printoutput = True):
         
     return p_value
 
+
 def plotspeedmap(vr_map, vr_longs, vr_lats, fig = None, ax = None, 
                  plot_colourbar = True, plot_sinelat = False):
     # a function to plot a speed map, such as output from WSA or MAS.
     
+
     if fig == None:
         fig = plt.figure(figsize = (9,4.5))
     
@@ -417,13 +419,20 @@ def plotspeedmap(vr_map, vr_longs, vr_lats, fig = None, ax = None,
     if plot_sinelat:
         ylims = [-1, 1]
         yticks = [-1,-0.5,0,0.5,1]
+        
+        
+    if plot_sinelat:
+        X, Y = np.meshgrid(vr_longs.value*180/np.pi,  np.sin(vr_lats.value))
+    else:
+        X, Y = np.meshgrid(vr_longs.value*180/np.pi,  vr_lats.value*180/np.pi)
+        
 
     if plot_sinelat:
-        pc = ax.pcolor(vr_longs.value*180/np.pi, np.sin(vr_lats.value), vr_map.value, 
+        pc = ax.pcolormesh(X, Y, vr_map.value, 
                shading='auto',vmin=250, vmax=650)
         ax.set_ylabel('Sine lat')
     else:
-        pc = ax.pcolor(vr_longs.value*180/np.pi, vr_lats.value*180/np.pi, vr_map.value, 
+        pc = ax.pcolormesh(X, Y, (vr_map.value).T, 
                shading='auto',vmin=250, vmax=650)
         ax.set_ylabel('Latitude [deg]')
 
@@ -450,11 +459,12 @@ def plotspeedmap(vr_map, vr_longs, vr_lats, fig = None, ax = None,
         cb = fig.colorbar(pc, cax = axins, orientation = 'horizontal',  pad = -0.1)
         cb.ax.xaxis.set_ticks_position("top")
         ax.text(0.15,1.05,r'$V_{SW}$ [km/s]' , 
-                fontsize = 11, transform=ax.transAxes, backgroundcolor = 'w')
+                fontsize = 12, transform=ax.transAxes, backgroundcolor = 'w')
     else:
         axins = np.nan
         
     return fig, ax, axins, pc
+
 
 def plotbrmap(br_map, br_longs, br_lats, fig = None, ax = None, 
                  plot_colourbar = True, plot_sinelat = False):
@@ -471,14 +481,19 @@ def plotbrmap(br_map, br_longs, br_lats, fig = None, ax = None,
     if plot_sinelat:
         ylims = [-1, 1]
         yticks = [-1,-0.5,0,0.5,1]
+        
+    if plot_sinelat:
+        X, Y = np.meshgrid(br_longs.value*180/np.pi,  np.sin(br_lats.value))
+    else:
+        X, Y = np.meshgrid(br_longs.value*180/np.pi,  br_lats.value*180/np.pi)
 
     if plot_sinelat:
-        pc = ax.pcolor(br_longs.value*180/np.pi, np.sin(br_lats.value), br_map, 
-               shading='auto',vmin=-10, vmax=10)
+        pc = ax.pcolormesh(X, Y, br_map.value, 
+               shading='auto',vmin=-100, vmax=100)
         ax.set_ylabel('Sine lat')
     else:
-        pc = ax.pcolor(br_longs.value*180/np.pi, br_lats.value*180/np.pi, br_map, 
-               shading='auto',vmin=-10, vmax=10)
+        pc = ax.pcolormesh(X, Y, br_map.value, 
+               shading='auto',vmin=-100, vmax=100)
         ax.set_ylabel('Latitude [deg]')
 
     ax.set_ylim(ylims); 
@@ -504,7 +519,7 @@ def plotbrmap(br_map, br_longs, br_lats, fig = None, ax = None,
         cb = fig.colorbar(pc, cax = axins, orientation = 'horizontal',  pad = -0.1)
         cb.ax.xaxis.set_ticks_position("top")
         ax.text(0.15,1.05,r'$B_{R}$ ' , 
-                fontsize = 11, transform=ax.transAxes, backgroundcolor = 'w')
+                fontsize = 12, transform=ax.transAxes, backgroundcolor = 'w')
     else:
         axins = np.nan
         

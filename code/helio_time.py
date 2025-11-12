@@ -316,7 +316,7 @@ def doyyr2mjd(doy,yr):
     
     #create a datetime object at the start of the year, add doy as a delta
     def _create_dt_(doy,yr):
-        dt = datetime.datetime(yr,yr*0+1,yr*0+1) + datetime.timedelta(days = np.floor(doy)-yr*0+1)
+        dt = datetime.datetime(yr, yr*0+1, yr*0+1) + datetime.timedelta(days=int(np.floor(doy) - yr * 0 + 1))
         return dt
     vec_create_dt = np.vectorize(_create_dt_)
     dt = vec_create_dt(doy,yr) 

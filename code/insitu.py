@@ -56,10 +56,15 @@ def ICMElist(filepath = None):
             #icmes.set_value(rownum,colnum,datetime(year,month, day,hour,minute,0))
             icmes.at[rownum,colnum] = datetime(year,month, day,hour,minute,0)
             
+            #print(datestr)
+            
         #tidy up the plasma properties
         for paramno in range(10,17):
             dv=str(icmes[paramno][rownum])
-            if dv == '...' or dv == 'dg' or dv == 'nan':
+            
+            #print(str(paramno)+ ' ' + dv)
+            
+            if dv == '...' or dv == 'dg' or dv == 'nan' or dv == '... P' or dv == '... Q':
                 #icmes.set_value(rownum,paramno,np.nan)
                 icmes.at[rownum,paramno] = np.nan
             else:
