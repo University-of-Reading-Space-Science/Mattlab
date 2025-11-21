@@ -15,3 +15,4 @@
 #ipnyb checkpoints
 /code/.ipynb*
 .DS_Store
+.vscode/settings.json

@@ -18,8 +18,6 @@ import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import urllib.request
 import requests
-import certifi
-import ssl
 from bs4 import BeautifulSoup
 from scipy.interpolate import griddata
 
@@ -42,12 +40,7 @@ def LoadSSN(filepath='null', download_now = False, sminpath = None):
         filepath = os.path.join(datapath,'SN_m_tot_V2.0.csv')
             
     if download_now:
-        url = 'http://www.sidc.be/silso/DATA/SN_m_tot_V2.0.csv'
-    
-        response = requests.get(url)
-        with open(filepath, 'wb') as f:
-            f.write(response.content)
-                
+        urllib.request.urlretrieve('http://www.sidc.be/silso/DATA/SN_m_tot_V2.0.csv', filepath)
         
 
     
@@ -140,11 +133,7 @@ def LoadSSNyr(filepath='null', download_now = False, sminpath = None):
         filepath = os.path.join(datapath,'SN_y_tot_V2.0.csv')
             
     if download_now:
-        url = 'https://www.sidc.be/SILSO/DATA/SN_y_tot_V2.0.csv'
-        response = requests.get(url)
-        with open(filepath, 'wb') as f:
-            f.write(response.content)
-
+        urllib.request.urlretrieve('https://www.sidc.be/SILSO/DATA/SN_y_tot_V2.0.csv', filepath)
         
 
     col_specification =[(0, 4), (8, 13)]
@@ -421,20 +410,15 @@ def load_oulu_phi(filepath = None, download_now = True):
 
 def load_oulu_phi_extended(filepath = None, download_now = True):
     #function to load the heliospheric modulation potential estimated from neutron
-    #monitor + ionisation chamber(?) data, at: t
+    #monitor + ionisation chamber(?) data, at: https://cosmicrays.oulu.fi/phi/Phi_mon.txt
     
     if download_now:
-        context = ssl.create_default_context(cafile=certifi.where())
-        data_dir =  system._setup_dirs_()['datapath']
-        url = 'https://cosmicrays.oulu.fi/phi/Phi_mon.txt'
-        filepath = os.path.join(data_dir, 'Phi_mon.txt')
-        
-        with urllib.request.urlopen(url, context=context) as response:
-            with open(filepath, 'wb') as out_file:
-                out_file.write(response.read())
+        datapath =  system._setup_dirs_()['datapath']
+        urllib.request.urlretrieve('https://cosmicrays.oulu.fi/phi/Phi_mon.txt',
+                                   os.path.join(datapath,'Phi_mon.txt'))
       
     if filepath is None:
-        data_dir = system._setup_dirs_()['datapath']
+        data_dir = system._setup_dirs_()
         filepath = os.path.join(data_dir, 'Phi_mon.txt')
         
     valid_lines=[]
@@ -508,7 +492,7 @@ def load_oulu_phi_extended(filepath = None, download_now = True):
     return melted_df     
 
 
-def load_14C_phi(filepath = None):
+def load_14C_phi_IlyaBrehm(filepath = None):
     #function to load the heliospheric modulation potential estimated from 14C
     #supplied by Ilya from Brehm, NatGeo, 2021
      
@@ -521,6 +505,24 @@ def load_14C_phi(filepath = None):
                          names=["Year", "phi_14C", "phi_14C_sigma", "phi_14C_SSA1"])
     #make the year the mid point.
     df['Year'] = df['Year'] +0.5
+    #add mjd and datetime
+    df['mjd'] = htime.fracyear2mjd(df['Year'].to_numpy())
+    df['datetime'] = htime.mjd2datetime(df['mjd'].to_numpy())
+    
+    return df
+
+
+def load_14C_phi_Brehm_published(filepath = None):
+    #function to load the heliospheric modulation potential estimated from 14C
+    #published data from Brehm et al., NatGeo, 2021
+     
+    if filepath is None:
+        data_dir = system._setup_dirs_()['datapath']
+        filepath = os.path.join(data_dir, 'Brehm2021_SolModParam.dat')
+
+    
+    df = pd.read_csv(filepath, sep="\t", 
+                         names=["Year", "phi_14C"])
     #add mjd and datetime
     df['mjd'] = htime.fracyear2mjd(df['Year'].to_numpy())
     df['datetime'] = htime.mjd2datetime(df['mjd'].to_numpy())
@@ -568,14 +570,14 @@ def load_wsa_hcstilt(filepath = None, download_now = True):
             # Use BeautifulSoup to navigate and extract data from the HTML
         else:
             print("Failed to retrieve the webpage.")
-    else: # used pre-downloaded file
-        if filepath is None:
-            data_dir = system._setup_dirs_()['datapath']
-            filepath = os.path.join(data_dir, 'WSO - Computed _Tilt_ Angle of the HCS.html')
-            
-        with open(filepath,"r") as f:
-            text = f.read()
-        soup = BeautifulSoup(text, 'html.parser')
+
+    if filepath is None:
+        data_dir = system._setup_dirs_()['datapath']
+        filepath = os.path.join(data_dir, 'WSO - Computed _Tilt_ Angle of the HCS.html')
+        
+    with open(filepath,"r") as f:
+        text = f.read()
+    soup = BeautifulSoup(text, 'html.parser')
     
     # Extract the text
     data_text = soup.get_text()
@@ -1099,10 +1101,6 @@ def osf_and_streamer_belt_width(yrs, ssn, min_yrs, SPE_phase, SPE_LOSS_AVG,
         #the fractional loss of SB flux + CH must equal the total
         chi_SB[n] = loss_frac[n] - chi_CH
         
-        #the total loss must be equal to the SB + CH abs loss
-        #loss_SB = loss_abs[n] - chi_CH * F_CH[n]
-        #chi_SB[n] = loss_SB / F_SB[n]
-        
         #some of the SB flux evolves into CH flux, over a range of time scales given by S_CH_weights
         S_CH[n] = 0 
         if n>1:
@@ -1122,20 +1120,13 @@ def osf_and_streamer_belt_width(yrs, ssn, min_yrs, SPE_phase, SPE_LOSS_AVG,
         F_SB[n+1] =  F_SB[n] + source[n] - chi_SB[n] * OSF[n] - S_CH[n] 
         if F_SB[n+1] < 0:
             F_SB[n+1] = 0
-            
           
         #CH flux has a source from the SB and decays with a constant time
         F_CH[n+1] = F_CH[n]  - chi_CH * OSF[n] + S_CH[n]
         
         if F_CH[n+1] < 0:
             F_CH[n+1] = 0
-            
-        #total OSF can't be less than CH+SB flux - check and correction added on May 2025
-        if (F_SB[n+1] + F_CH[n+1])> OSF[n+1]:
-            frac = OSF[n+1] / (F_SB[n+1] + F_CH[n+1])
-            F_SB[n+1] = F_SB[n+1] * frac
-            F_CH[n+1] = F_CH[n+1] * frac
-            
+        
         SBwidth[n] = np.sin(1.0 - F_CH[n] /OSF[n])
         
     #the last year of SBwidth is likely nonesense
@@ -1147,14 +1138,12 @@ def osf_and_streamer_belt_width(yrs, ssn, min_yrs, SPE_phase, SPE_LOSS_AVG,
         fig = plt.figure(figsize=(9,6))
     
         ax = plt.subplot(4,1,1)
-        ax.fill_between(yrs, ssn*0, ssn/50, label = 'SSN/50', facecolor ='grey')
-        ax.plot(yrs, OSF, 'k', label = 'OSF from model')
+        ax.plot(yrs, OSF, 'b', label = 'SSN-based model')
+        ax.fill_between(yrs, ssn*0, ssn/100, label = 'SSN/100', facecolor ='grey')
         ax.set_ylim((0,14.5))
         ax.set_ylabel(r'OSF [x$10^14$ Wb]', fontsize = 12)
         ax.set_xlabel(r'Year', fontsize = 12)
         ax.legend(ncol = 4, fontsize = 12, loc = 'upper left')
-        xx = ax.get_xlim()
-        ax.set_xlim(xx)
     
     
         ax = plt.subplot(4,1,2)
@@ -1162,18 +1151,15 @@ def osf_and_streamer_belt_width(yrs, ssn, min_yrs, SPE_phase, SPE_LOSS_AVG,
         ax.plot(yrs, F_SB, 'b', label = 'F_SB')
         ax.plot(yrs, F_CH, 'r', label = 'F_CH')
         ax.legend(ncol = 3, fontsize = 12, loc = 'upper left')
-        ax.set_xlim(xx)
     
         ax = plt.subplot(4,1,3)
         ax.plot(yrs, source, 'k', label = 'source')
         ax.plot(yrs, S_CH, 'r', label = 'S_CH')
         ax.legend(ncol = 3, fontsize = 12, loc = 'upper left')
-        ax.set_xlim(xx)
     
         ax = plt.subplot(4,1,4)
         ax.plot(yrs, SBwidth, 'k', label = 'SBwidth')
         ax.legend(ncol = 3, fontsize = 12, loc = 'upper left')
-        ax.set_xlim(xx)
     
     return OSF, SBwidth
 
@@ -1291,52 +1277,27 @@ def VswLongAvg_SineCurve(lats, inclination, width, Vfast, dV, plotnow = False):
     return vlats_longavg
 
 
-def HCSinclination(yrs, min_yrs, use_orig = True):  
+def HCSinclination(yrs, min_yrs):  
     #ccompute HCS inclination for use with SB width calculation. This is heritage
     #code for eh SB width calculation. Better to use load_wsa_hcstilt() and
     #compute_phase_SPE() to get the latest data.
-    #
-    #Now downloads WSO HCS tilt and computes the SPE. Legacy values are commented out. 6/8/25
     #
     #Mathew Owens, 15/8/23   
     
     #convert phase to HCS tilt
     phase = solar_cycle_phase(yrs, min_yrs)
     
-    if use_orig:
-        dtilt = np.array([   [0.290444101017667,   0.185703032412197,   0.014049275473509],
-           [0.860538160945352,   0.245863772889636,   0.017050905137171],
-          [ 1.430632220873037,   0.611783832541170,   0.065108031302459],
-          [ 2.000726280800723,   0.544184710365411,   0.039746254726842],
-          [ 2.570820340728408,   0.432841654494594,   0.043855889338512],
-          [ 3.140914400656093,   0.501222759547090,   0.030439693765475],
-          [ 3.711008460583778,   0.401897438567343,   0.035001365105233],
-          [ 4.281102520511463,   0.282743338823081,   0.017666796391403],
-          [ 4.851196580439149,   0.280998009571087,   0.019759985995491],
-          [ 5.421290640366834,   0.214199499108395,   0.017640142498358],
-          [ 5.991384700294519,   0.217557320713712,   0.021695761089958]])
-        
- 
-    else:
-        #using WSO HCS tilt Lav
-        # wsatilt = load_wsa_hcstilt()
-        # SPE_phase, SPE_AVG, SPE_STD, SPE = compute_phase_SPE(wsatilt['mjd'], wsatilt['L_av'], 
-        #                     solarmin_mjd = None,  nphase = 11, plotnow = True)
-        # dtilt = np.array([SPE_phase, SPE_AVG * np.pi/180]).T
-        dtilt = np.array([[-0.57119866,  0.35111391],
-               [ 0.        ,  0.33383007],
-               [ 0.57119866,  0.45039543],
-               [ 1.14239733,  0.85940424],
-               [ 1.71359599,  1.20998195],
-               [ 2.28479466,  1.21449438],
-               [ 2.85599332,  1.12532241],
-               [ 3.42719199,  0.90961255],
-               [ 3.99839065,  0.78317373],
-               [ 4.56958931,  0.66757641],
-               [ 5.14078798,  0.52559844],
-               [ 5.71198664,  0.34999568],
-               [ 6.28318531,  0.33383007],
-               [ 6.85438397,  0.43972869]]) 
+    dtilt = np.array([   [0.290444101017667,   0.185703032412197,   0.014049275473509],
+       [0.860538160945352,   0.245863772889636,   0.017050905137171],
+      [ 1.430632220873037,   0.611783832541170,   0.065108031302459],
+      [ 2.000726280800723,   0.544184710365411,   0.039746254726842],
+      [ 2.570820340728408,   0.432841654494594,   0.043855889338512],
+      [ 3.140914400656093,   0.501222759547090,   0.030439693765475],
+      [ 3.711008460583778,   0.401897438567343,   0.035001365105233],
+      [ 4.281102520511463,   0.282743338823081,   0.017666796391403],
+      [ 4.851196580439149,   0.280998009571087,   0.019759985995491],
+      [ 5.421290640366834,   0.214199499108395,   0.017640142498358],
+      [ 5.991384700294519,   0.217557320713712,   0.021695761089958]])
         
     inclination = np.interp(phase, dtilt[:,0], dtilt[:,1], period = 2*np.pi)
     
